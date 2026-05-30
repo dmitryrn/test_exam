@@ -1,12 +1,20 @@
 - added pytest conf because it was needed to make make test work
 - moved mutmut conf to setup.cfg, because that's per docs and makes it work
 - realized that python 3.14 is too new mutmut doens't work with it, downgraded to 3.12
+
 - captured orig mut and cov
+
+- wrote tests for one func, reran mut, and found that it has improved
+- to improve converate i realized i just need to cover everything with tests first then check coverage
 
 # mut
 ## orig
 ⠋ 107/107  🎉 0  ⏰ 0  🤔 0  🙁 107  🔇 0
 107 mutants
+
+## price_with_tax test done
+│⠼ 107/107  🎉 8  ⏰ 0  🤔 0  🙁 99  🔇 0                                                                                                                     │
+
 
 # cov
 ## orig
