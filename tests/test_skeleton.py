@@ -8,7 +8,7 @@ from billing import (
 )
 from billing.calculator import (
     _round, bulk_discount, compute_refund, parse_iso_date, split_payment,
-    validate_coupon
+    tax_breakdown, validate_coupon
 )
 
 
@@ -390,3 +390,18 @@ class TestComputeBulkTotal:
             return
 
         assert compute_bulk_total(unit_price, qty) == expected
+
+
+class TestTaxBreakdown:
+    @pytest.mark.parametrize(
+        ("net", "expected"),
+        [
+            (0, (0, 0)),
+            (10, (10, 2.1)),
+            (10.5, (10.5, 2.21)),
+            (-10, (-10, -2.1)), # suspicious
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_tax_breakdown(self, net, expected):
+        assert tax_breakdown(net) == expected
