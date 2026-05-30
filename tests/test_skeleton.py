@@ -43,9 +43,68 @@ class TestComputeSubtotal:
             compute_subtotal(10, qty)
 
 
-class TestPipeline:
-    def test_happy_flow_eur(self):
-        assert compute_total(10, 2) == 25.41
+class TestBookingFee:
+    def test_happy_path(self):
+        assert booking_fee(2) == 1
 
-    def test_happy_flow_with_coupon(self):
-        ...
+    # suspicious
+    def test_zero_and_negative_values(self):
+        assert booking_fee(0) == 0
+        assert booking_fee(-1) == -0.5
+        assert booking_fee(-100) == -50
+
+
+class TestPipeline:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "without coupon",
+                "unit_price": 10,
+                "qty": 2,
+                "expected": 25.41,
+            },
+            {
+                "name": "with coupon",
+                "unit_price": 10,
+                "qty": 2,
+                "coupon": "SPORT10",
+                "expected": 22.87,
+            },
+            {
+                "name": "invalid coupon does not apply",
+                "unit_price": 10,
+                "qty": 2,
+                "coupon": "NON_EXISTING",
+                "expected": 25.41,
+            },
+            {
+                "name": "negative unit price",
+                "unit_price": -10,
+                "qty": 2,
+                "error_match": "net must be non‑negative",
+            },
+            {
+                "name": "negative qty",
+                "unit_price": 10,
+                "qty": -1,
+                "error_match": "qty must be positive",
+            },
+            {
+                "name": "zero qty",
+                "unit_price": 10,
+                "qty": 0,
+                "error_match": "qty must be positive",
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_happy_flow_eur(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(ValueError, match=error_match):
+                compute_total(case["unit_price"], case["qty"], case.get("coupon"))
+            return
+
+        assert compute_total(case["unit_price"], case["qty"], case.get("coupon")) == case.get("expected")
