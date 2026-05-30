@@ -6,6 +6,7 @@ from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
     compute_subtotal, convert_currency
 )
+from billing.calculator import validate_coupon
 
 
 class TestPriceWithTax:
@@ -108,3 +109,51 @@ class TestPipeline:
             return
 
         assert compute_total(case["unit_price"], case["qty"], case.get("coupon")) == case.get("expected")
+
+
+class TestValidateCoupon:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "valid coupon",
+                "coupon": "SPORT10",
+                "expected": True,
+            },
+            {
+                "name": "lowercase valid coupon",
+                "coupon": "sport10",
+                "expected": True,
+            },
+            {
+                "name": "non existing coupon",
+                "coupon": "NON_EXISTING",
+                "expected": False,
+            },
+            {
+                "name": "similar invalid coupon",
+                "coupon": "SPORT1",
+                "expected": False,
+            },
+            {
+                "name": "empty string input",
+                "coupon": "",
+                "expected": False,
+            },
+            {
+                "name": "none input",
+                "coupon": None,
+                "error_match": "'NoneType' object has no attribute 'upper'",
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_coupon(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(AttributeError, match=error_match):
+                validate_coupon(case["coupon"])
+            return
+
+        assert validate_coupon(case["coupon"]) is case["expected"]
