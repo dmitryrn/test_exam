@@ -1,0 +1,34 @@
+<html><body><h1>billing/calculator.py</h1>Killed 102 out of 105 mutants<h2>Survived</h2>Survived mutation testing. These mutants show holes in your test suite.<h3>Mutant 28</h3><pre>--- billing/calculator.py
++++ billing/calculator.py
+@@ -34,7 +34,7 @@
+ 
+ # 2
+ def apply_coupon(gross: float, coupon: str | None = None) -> float:
+-    disc = COUPON_CODES.get(coupon.upper() if coupon else "", 0.0)
++    disc = COUPON_CODES.get(coupon.upper() if coupon else "XXXX", 0.0)
+     return _round(gross * (1 - disc))
+ 
+ # 3
+</pre><h3>Mutant 103</h3><pre>--- billing/calculator.py
++++ billing/calculator.py
+@@ -128,7 +128,7 @@
+ 
+ # 19
+ def round_money(value: float, decimals: int = 2) -> float:
+-    return float(Decimal(str(value)).quantize(Decimal((0, (1,), -decimals)), rounding=ROUND_HALF_UP))
++    return float(Decimal(str(value)).quantize(Decimal((1, (1,), -decimals)), rounding=ROUND_HALF_UP))
+ 
+ # 20
+ def is_weekend_rate(date: datetime) -> bool:
+</pre><h3>Mutant 104</h3><pre>--- billing/calculator.py
++++ billing/calculator.py
+@@ -128,7 +128,7 @@
+ 
+ # 19
+ def round_money(value: float, decimals: int = 2) -> float:
+-    return float(Decimal(str(value)).quantize(Decimal((0, (1,), -decimals)), rounding=ROUND_HALF_UP))
++    return float(Decimal(str(value)).quantize(Decimal((0, (2,), -decimals)), rounding=ROUND_HALF_UP))
+ 
+ # 20
+ def is_weekend_rate(date: datetime) -> bool:
+</pre></body></html>
