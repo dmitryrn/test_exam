@@ -6,7 +6,7 @@ from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
     compute_subtotal, convert_currency
 )
-from billing.calculator import _round, split_payment, validate_coupon
+from billing.calculator import _round, parse_iso_date, split_payment, validate_coupon
 
 
 class TestRound:
@@ -263,3 +263,24 @@ class TestConvertCurrency:
             return
 
         assert convert_currency(case["amount_eur"], case["to"]) == case["expected"]
+
+
+class TestParseIsoDate:
+    @pytest.mark.parametrize(
+        ("date_str", "expected", "error", "error_match"),
+        [
+            ("2026-05-30", "2026-05-30 00:00:00", None, None),
+            ("2026-05-30T14:15:16", "2026-05-30 14:15:16", None, None),
+            ("2026-05-30T14:15:16+03:00", "2026-05-30 14:15:16+03:00", None, None),
+            ("not-a-date", None, ValueError, "Invalid isoformat string: 'not-a-date'"),
+            (None, None, TypeError, "fromisoformat: argument must be str"),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_parse_iso_date(self, date_str, expected, error, error_match):
+        if error_match is not None:
+            with pytest.raises(error, match=error_match):
+                parse_iso_date(date_str)
+            return
+
+        assert str(parse_iso_date(date_str)) == expected
