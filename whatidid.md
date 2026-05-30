@@ -7,6 +7,8 @@
 - wrote tests for one func, reran mut, and found that it has improved
 - to improve converate i realized i just need to cover everything with tests first then check coverage
 
+- used go style table test because I think they're more uniform and less error prone
+
 # mut
 ## orig
 ⠋ 107/107  🎉 0  ⏰ 0  🤔 0  🙁 107  🔇 0

@@ -6,7 +6,7 @@ from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
     compute_subtotal, convert_currency
 )
-from billing.calculator import validate_coupon
+from billing.calculator import split_payment, validate_coupon
 
 
 class TestPriceWithTax:
@@ -157,3 +157,45 @@ class TestValidateCoupon:
             return
 
         assert validate_coupon(case["coupon"]) is case["expected"]
+
+
+class TestSplitPayment:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "even split",
+                "total": 10,
+                "parts": 2,
+                "expected": [5, 5],
+            },
+            {
+                "name": "rounding diff goes to last part",
+                "total": 10,
+                "parts": 3,
+                "expected": [3.33, 3.33, 3.34],
+            },
+            {
+                "name": "negative parts",
+                "total": 10,
+                "parts": -1,
+                "error_match": "parts must be > 0",
+            },
+            {
+                "name": "zero parts",
+                "total": 10,
+                "parts": 0,
+                "error_match": "parts must be > 0",
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_split_payment(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(ValueError, match=error_match):
+                split_payment(case["total"], case["parts"])
+            return
+
+        assert split_payment(case["total"], case["parts"]) == case["expected"]
