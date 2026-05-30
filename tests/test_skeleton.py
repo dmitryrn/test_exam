@@ -6,7 +6,29 @@ from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
     compute_subtotal, convert_currency
 )
-from billing.calculator import split_payment, validate_coupon
+from billing.calculator import _round, split_payment, validate_coupon
+
+
+class TestRound:
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (0, 0),
+            (-1, -1),
+            (-1.544, -1.54),
+            (1, 1),
+            (1.1, 1.1),
+            (1.9, 1.9),
+            (1.5, 1.5),
+            (1.544, 1.54),
+            (1.55, 1.55),
+            (1.555, 1.56),
+            (1 / 3, 0.33),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_round(self, value, expected):
+        assert _round(value) == expected
 
 
 class TestPriceWithTax:
@@ -199,3 +221,45 @@ class TestSplitPayment:
             return
 
         assert split_payment(case["total"], case["parts"]) == case["expected"]
+
+
+class TestConvertCurrency:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "eur to eur",
+                "amount_eur": 10,
+                "to": "EUR",
+                "expected": 10,
+            },
+            {
+                "name": "eur to usd",
+                "amount_eur": 10,
+                "to": "USD",
+                "expected": 10.87,
+            },
+            {
+                "name": "lowercase currency",
+                "amount_eur": 10,
+                "to": "usd",
+                "expected": 10.87,
+            },
+            {
+                "name": "unsupported currency",
+                "amount_eur": 10,
+                "to": "JPY",
+                "error_match": "Unsupported currency JPY",
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_convert_currency(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(KeyError, match=error_match):
+                convert_currency(case["amount_eur"], case["to"])
+            return
+
+        assert convert_currency(case["amount_eur"], case["to"]) == case["expected"]
