@@ -1,6 +1,7 @@
 - added pytest conf because it was needed to make make test work
 - moved mutmut conf to setup.cfg, because that's per docs and makes it work
 - realized that python 3.14 is too new mutmut doens't work with it, downgraded to 3.12
+- captured orig mut and cov
 
 # mut
 ## orig
