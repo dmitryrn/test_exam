@@ -148,7 +148,7 @@ class TestValidateCoupon:
         ],
         ids=lambda case: case["name"],
     )
-    def test_coupon(self, case):
+    def test_validate_coupon(self, case):
         error_match = case.get("error_match")
 
         if error_match is not None:
