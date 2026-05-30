@@ -6,6 +6,7 @@
 # Результаты (внимание!)
 - `htmlcov/` - финальный результат покрытия
 - `mutmut_html/` - финальный результат mutmuit, сгенерированный командой `mutmut html`
+- `mut.json` - финальный результат mutmut, команда: `python -c "import sqlite3, json; conn = sqlite3.connect('.mutmut-cache'); c = conn.cursor(); c.execute('SELECT status, COUNT(*) FROM mutant GROUP BY status'); res = dict(c.fetchall()); print(json.dumps(res, indent=4))" > mut.json`
 
 # Что я делал
 - добавил pytest конифиг файл, потому что он был нужен что бы запустить test work без ошибок
