@@ -8,7 +8,8 @@ from billing import (
 )
 from billing.calculator import (
     _round, apply_dynamic_tax, bulk_discount, compute_refund, parse_iso_date,
-    split_payment, tax_breakdown, validate_coupon, validate_tax_number
+    loyalty_points_earned, split_payment, tax_breakdown, validate_coupon,
+    validate_tax_number
 )
 
 
@@ -493,3 +494,22 @@ class TestApplyDynamicTax:
             return
 
         assert apply_dynamic_tax(case["net"], case["country"]) == case["expected"]
+
+
+class TestLoyaltyPointsEarned:
+    @pytest.mark.parametrize(
+        ("net", "expected"),
+        [
+            (0, 0),
+            (10, 0),
+            (49.99, 0),
+            (50, 1),
+            (50.1, 1),
+            (100, 2),
+            (10.5, 0),
+            (-100, -2), # suspicious
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_loyalty_points_earned(self, net, expected):
+        assert loyalty_points_earned(net) == expected
