@@ -17,6 +17,8 @@
 ## price_with_tax test done
 │⠼ 107/107  🎉 8  ⏰ 0  🤔 0  🙁 99  🔇 0                                                                                                                     │
 
+## after implementing all tests best effort
+│⠴ 107/107  🎉 89  ⏰ 0  🤔 0  🙁 18  🔇 0                                                                                                                                                                                                                    │
 
 # cov
 ## orig
@@ -28,3 +30,12 @@
 │27, 131, 135                                                                                                                                                 │
 │-----------------------------------------------------                                                                                                        │
 │TOTAL                      86     46    47%                                                                                                                  │
+
+## after implementing all tests best effort
+│((.venv) ) ➜  mutation_project git:(master) ✗ coverage report -m                                                                                                                                                                                             │
+│Name                    Stmts   Miss  Cover   Missing                                                                                                                                                                                                        │
+│-----------------------------------------------------                                                                                                                                                                                                        │
+│billing/__init__.py         7      0   100%                                                                                                                                                                                                                  │
+│billing/calculator.py      79      0   100%                                                                                                                                                                                                                  │
+│-----------------------------------------------------                                                                                                                                                                                                        │
+│TOTAL                      86      0   100%                                                                                                                                                                                                                  │
