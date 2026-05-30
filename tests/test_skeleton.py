@@ -1,15 +1,34 @@
 """
 Starter tests for Mutation Shootout.
 """
+
+from datetime import datetime
+
 import pytest
 from billing import (
-    price_with_tax, apply_coupon, compute_total, booking_fee,
-    compute_subtotal, convert_currency, compute_bulk_total
+    price_with_tax,
+    apply_coupon,
+    compute_total,
+    booking_fee,
+    compute_subtotal,
+    convert_currency,
+    compute_bulk_total,
 )
 from billing.calculator import (
-    _round, apply_dynamic_tax, apply_loyalty_discount, bulk_discount,
-    cap_price, compute_refund, parse_iso_date, loyalty_points_earned,
-    split_payment, tax_breakdown, validate_coupon, validate_tax_number
+    _round,
+    apply_dynamic_tax,
+    apply_loyalty_discount,
+    bulk_discount,
+    cap_price,
+    compute_refund,
+    parse_iso_date,
+    loyalty_points_earned,
+    round_money,
+    is_weekend_rate,
+    split_payment,
+    tax_breakdown,
+    validate_coupon,
+    validate_tax_number,
 )
 
 
@@ -134,7 +153,9 @@ class TestPipeline:
                 compute_total(case["unit_price"], case["qty"], case.get("coupon"))
             return
 
-        assert compute_total(case["unit_price"], case["qty"], case.get("coupon")) == case.get("expected")
+        assert compute_total(
+            case["unit_price"], case["qty"], case.get("coupon")
+        ) == case.get("expected")
 
 
 class TestValidateCoupon:
@@ -324,13 +345,13 @@ class TestComputeRefund:
                 "percentage": 1,
                 "expected": 10,
             },
-            { # suspicious
+            {  # suspicious
                 "name": "total_paid=0",
                 "total_paid": 0,
                 "percentage": 0.5,
                 "expected": 0,
             },
-            { # suspicious
+            {  # suspicious
                 "name": "total_paid=-10",
                 "total_paid": -10,
                 "percentage": 0.5,
@@ -347,7 +368,9 @@ class TestComputeRefund:
                 compute_refund(case["total_paid"], case["percentage"])
             return
 
-        assert compute_refund(case["total_paid"], case["percentage"]) == case["expected"]
+        assert (
+            compute_refund(case["total_paid"], case["percentage"]) == case["expected"]
+        )
 
 
 class TestBulkDiscount:
@@ -400,7 +423,7 @@ class TestTaxBreakdown:
             (0, (0, 0)),
             (10, (10, 2.1)),
             (10.5, (10.5, 2.21)),
-            (-10, (-10, -2.1)), # suspicious
+            (-10, (-10, -2.1)),  # suspicious
         ],
         ids=lambda case: str(case),
     )
@@ -507,7 +530,7 @@ class TestLoyaltyPointsEarned:
             (50.1, 1),
             (100, 2),
             (10.5, 0),
-            (-100, -2), # suspicious
+            (-100, -2),  # suspicious
         ],
         ids=lambda case: str(case),
     )
@@ -521,9 +544,9 @@ class TestApplyLoyaltyDiscount:
         [
             (0, 0, 0),
             (55, 13, 54.87),
-            (55, -13, 55.13), # suspicious
-            (-55, 13, 0), # suspicious
-            (-55, -13, 0), # suspicious
+            (55, -13, 55.13),  # suspicious
+            (-55, 13, 0),  # suspicious
+            (-55, -13, 0),  # suspicious
         ],
         ids=lambda case: str(case),
     )
@@ -546,3 +569,40 @@ class TestCapPrice:
     )
     def test_cap_price(self, price, cap, expected):
         assert cap_price(price, cap) == expected
+
+
+class TestRoundMoney:
+    @pytest.mark.parametrize(
+        ("value", "decimals", "expected"),
+        [
+            (0, 2, 0),
+            (1, 2, 1),
+            (1.544, 2, 1.54),
+            (1.555, 2, 1.56),
+            (-1.544, 2, -1.54),
+            (1 / 3, 2, 0.33),
+            (1.555, 1, 1.6),
+            (1.555, 3, 1.555),
+            (1.555, 0, 2),
+            (1.555, -1, 0),
+            (15, 0, 15),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_round_money(self, value, decimals, expected):
+        assert round_money(value, decimals) == expected
+
+
+class TestIsWeekendRate:
+    @pytest.mark.parametrize(
+        ("date", "expected"),
+        [
+            # 2026-05-25 is Monday
+            (datetime(2026, 5, 25), False),
+            (datetime(2026, 5, 30), True),
+            (datetime(2026, 5, 31), True),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_is_weekend_rate(self, date, expected):
+        assert is_weekend_rate(date) is expected
