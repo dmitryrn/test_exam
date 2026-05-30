@@ -8,7 +8,7 @@ from billing import (
 )
 from billing.calculator import (
     _round, bulk_discount, compute_refund, parse_iso_date, split_payment,
-    tax_breakdown, validate_coupon
+    tax_breakdown, validate_coupon, validate_tax_number
 )
 
 
@@ -405,3 +405,25 @@ class TestTaxBreakdown:
     )
     def test_tax_breakdown(self, net, expected):
         assert tax_breakdown(net) == expected
+
+
+class TestValidateTaxNumber:
+    @pytest.mark.parametrize(
+        ("tax_num", "expected", "error_match"),
+        [
+            ("LV1234567890", True, None),
+            ("LV123456789", False, None),
+            ("LV12345678901", False, None),
+            ("EE1234567890", False, None),
+            ("", False, None),
+            (None, None, "'NoneType' object has no attribute 'startswith'"),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_validate_tax_number(self, tax_num, expected, error_match):
+        if error_match is not None:
+            with pytest.raises(AttributeError, match=error_match):
+                validate_tax_number(tax_num)
+            return
+
+        assert validate_tax_number(tax_num) is expected
