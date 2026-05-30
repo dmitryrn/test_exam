@@ -595,14 +595,30 @@ class TestRoundMoney:
 
 class TestIsWeekendRate:
     @pytest.mark.parametrize(
-        ("date", "expected"),
+        "case",
         [
-            # 2026-05-25 is Monday
-            (datetime(2026, 5, 25), False),
-            (datetime(2026, 5, 30), True),
-            (datetime(2026, 5, 31), True),
+            {
+                "name": "monday",
+                "date": datetime(2026, 5, 25),
+                "expected": False,
+            },
+            {
+                "name": "friday",
+                "date": datetime(2026, 5, 29),
+                "expected": False,
+            },
+            {
+                "name": "saturday",
+                "date": datetime(2026, 5, 30),
+                "expected": True,
+            },
+            {
+                "name": "sunday",
+                "date": datetime(2026, 5, 31),
+                "expected": True,
+            },
         ],
-        ids=lambda case: str(case),
+        ids=lambda case: case["name"],
     )
-    def test_is_weekend_rate(self, date, expected):
-        assert is_weekend_rate(date) is expected
+    def test_is_weekend_rate(self, case):
+        assert is_weekend_rate(case["date"]) is case["expected"]
