@@ -7,8 +7,8 @@ from billing import (
     compute_subtotal, convert_currency, compute_bulk_total
 )
 from billing.calculator import (
-    _round, bulk_discount, compute_refund, parse_iso_date, split_payment,
-    tax_breakdown, validate_coupon, validate_tax_number
+    _round, apply_dynamic_tax, bulk_discount, compute_refund, parse_iso_date,
+    split_payment, tax_breakdown, validate_coupon, validate_tax_number
 )
 
 
@@ -427,3 +427,69 @@ class TestValidateTaxNumber:
             return
 
         assert validate_tax_number(tax_num) is expected
+
+
+class TestApplyDynamicTax:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "latvia",
+                "net": 10,
+                "country": "LV",
+                "expected": 12.1,
+            },
+            {
+                "name": "latvia decimal net",
+                "net": 10.5,
+                "country": "LV",
+                "expected": 12.71,
+            },
+            {
+                "name": "lowercase latvia",
+                "net": 10,
+                "country": "lv",
+                "expected": 12.1,
+            },
+            {
+                "name": "mixed case latvia",
+                "net": 10,
+                "country": "Lv",
+                "expected": 12.1,
+            },
+            {
+                "name": "non latvia",
+                "net": 10,
+                "country": "EE",
+                "expected": 12,
+            },
+            {
+                "name": "zero net",
+                "net": 0,
+                "country": "LV",
+                "expected": 0,
+            },
+            {
+                "name": "negative net",
+                "net": -10,
+                "country": "LV",
+                "expected": -12.1,
+            },
+            {
+                "name": "none country",
+                "net": 10,
+                "country": None,
+                "error_match": "'NoneType' object has no attribute 'upper'",
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_apply_dynamic_tax(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(AttributeError, match=error_match):
+                apply_dynamic_tax(case["net"], case["country"])
+            return
+
+        assert apply_dynamic_tax(case["net"], case["country"]) == case["expected"]
