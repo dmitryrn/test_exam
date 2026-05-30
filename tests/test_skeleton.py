@@ -10,7 +10,7 @@ from billing import (
 
 class TestPriceWithTax:
     def test_positive_value(self):
-        ...
+        assert price_with_tax(10) == 12.1
 
     def test_zero_returns_zero(self):
         ...
