@@ -7,9 +7,9 @@ from billing import (
     compute_subtotal, convert_currency, compute_bulk_total
 )
 from billing.calculator import (
-    _round, apply_dynamic_tax, bulk_discount, compute_refund, parse_iso_date,
-    loyalty_points_earned, split_payment, tax_breakdown, validate_coupon,
-    validate_tax_number
+    _round, apply_dynamic_tax, apply_loyalty_discount, bulk_discount,
+    cap_price, compute_refund, parse_iso_date, loyalty_points_earned,
+    split_payment, tax_breakdown, validate_coupon, validate_tax_number
 )
 
 
@@ -513,3 +513,36 @@ class TestLoyaltyPointsEarned:
     )
     def test_loyalty_points_earned(self, net, expected):
         assert loyalty_points_earned(net) == expected
+
+
+class TestApplyLoyaltyDiscount:
+    @pytest.mark.parametrize(
+        ("gross", "points", "expected"),
+        [
+            (0, 0, 0),
+            (55, 13, 54.87),
+            (55, -13, 55.13), # suspicious
+            (-55, 13, 0), # suspicious
+            (-55, -13, 0), # suspicious
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_apply_loyalty_discount(self, gross, points, expected):
+        assert apply_loyalty_discount(gross, points) == expected
+
+
+class TestCapPrice:
+    @pytest.mark.parametrize(
+        ("price", "cap", "expected"),
+        [
+            (10, 20, 10),
+            (20, 10, 10),
+            (10, 10, 10),
+            (0, 10, 0),
+            (-10, 10, -10),
+            (10.5, 10, 10),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_cap_price(self, price, cap, expected):
+        assert cap_price(price, cap) == expected
