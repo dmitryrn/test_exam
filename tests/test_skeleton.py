@@ -6,7 +6,9 @@ from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
     compute_subtotal, convert_currency
 )
-from billing.calculator import _round, parse_iso_date, split_payment, validate_coupon
+from billing.calculator import (
+    _round, compute_refund, parse_iso_date, split_payment, validate_coupon
+)
 
 
 class TestRound:
@@ -284,3 +286,63 @@ class TestParseIsoDate:
             return
 
         assert str(parse_iso_date(date_str)) == expected
+
+
+class TestComputeRefund:
+    @pytest.mark.parametrize(
+        "case",
+        [
+            {
+                "name": "percent=-0.1",
+                "total_paid": 10,
+                "percentage": -0.1,
+                "error_match": "percentage 0..1",
+            },
+            {
+                "name": "percent=1.1",
+                "total_paid": 10,
+                "percentage": 1.1,
+                "error_match": "percentage 0..1",
+            },
+            {
+                "name": "percent=0",
+                "total_paid": 10,
+                "percentage": 0,
+                "expected": 0,
+            },
+            {
+                "name": "percent=0.5",
+                "total_paid": 10,
+                "percentage": 0.5,
+                "expected": 5,
+            },
+            {
+                "name": "percent=1",
+                "total_paid": 10,
+                "percentage": 1,
+                "expected": 10,
+            },
+            { # suspicious
+                "name": "total_paid=0",
+                "total_paid": 0,
+                "percentage": 0.5,
+                "expected": 0,
+            },
+            { # suspicious
+                "name": "total_paid=-10",
+                "total_paid": -10,
+                "percentage": 0.5,
+                "expected": -5,
+            },
+        ],
+        ids=lambda case: case["name"],
+    )
+    def test_compute_refund(self, case):
+        error_match = case.get("error_match")
+
+        if error_match is not None:
+            with pytest.raises(ValueError, match=error_match):
+                compute_refund(case["total_paid"], case["percentage"])
+            return
+
+        assert compute_refund(case["total_paid"], case["percentage"]) == case["expected"]
