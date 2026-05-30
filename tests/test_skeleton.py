@@ -2,6 +2,7 @@
 Starter tests for Mutation Shootout.
 """
 
+import re
 from datetime import datetime
 
 import pytest
@@ -30,6 +31,10 @@ from billing.calculator import (
     validate_coupon,
     validate_tax_number,
 )
+
+
+def exact_match(message):
+    return f"^{re.escape(message)}$"
 
 
 class TestRound:
@@ -63,13 +68,15 @@ class TestPriceWithTax:
 
     @pytest.mark.parametrize("negative", [-1.0, -100])
     def test_negative_raises(self, negative):
-        with pytest.raises(ValueError, match="net must be non‑negative"):
+        with pytest.raises(ValueError, match=exact_match("net must be non‑negative")):
             price_with_tax(negative)
 
 
 class TestApplyCoupon:
     def test_valid_coupon(self):
         assert apply_coupon(100, "SPORT10") == 90
+        assert apply_coupon(100, "NEWUSER5") == 95
+        assert apply_coupon(100, "BLACKFRIDAY") == 75
         assert apply_coupon(100, "sport10") == 90
         assert apply_coupon(100, "spoRt10") == 90
 
@@ -85,7 +92,7 @@ class TestComputeSubtotal:
 
     @pytest.mark.parametrize("qty", [-1, 0])
     def test_invalid_values(self, qty):
-        with pytest.raises(ValueError, match="qty must be positive"):
+        with pytest.raises(ValueError, match=exact_match("qty must be positive")):
             compute_subtotal(10, qty)
 
 
@@ -149,7 +156,7 @@ class TestPipeline:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(ValueError, match=error_match):
+            with pytest.raises(ValueError, match=exact_match(error_match)):
                 compute_total(case["unit_price"], case["qty"], case.get("coupon"))
             return
 
@@ -199,7 +206,7 @@ class TestValidateCoupon:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(AttributeError, match=error_match):
+            with pytest.raises(AttributeError, match=exact_match(error_match)):
                 validate_coupon(case["coupon"])
             return
 
@@ -215,6 +222,12 @@ class TestSplitPayment:
                 "total": 10,
                 "parts": 2,
                 "expected": [5, 5],
+            },
+            {
+                "name": "single part",
+                "total": 10,
+                "parts": 1,
+                "expected": [10],
             },
             {
                 "name": "rounding diff goes to last part",
@@ -241,7 +254,7 @@ class TestSplitPayment:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(ValueError, match=error_match):
+            with pytest.raises(ValueError, match=exact_match(error_match)):
                 split_payment(case["total"], case["parts"])
             return
 
@@ -271,6 +284,12 @@ class TestConvertCurrency:
                 "expected": 10.87,
             },
             {
+                "name": "eur to gbp",
+                "amount_eur": 10,
+                "to": "GBP",
+                "expected": 8.7,
+            },
+            {
                 "name": "unsupported currency",
                 "amount_eur": 10,
                 "to": "JPY",
@@ -283,8 +302,9 @@ class TestConvertCurrency:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(KeyError, match=error_match):
+            with pytest.raises(KeyError) as exc_info:
                 convert_currency(case["amount_eur"], case["to"])
+            assert exc_info.value.args[0] == error_match
             return
 
         assert convert_currency(case["amount_eur"], case["to"]) == case["expected"]
@@ -304,7 +324,7 @@ class TestParseIsoDate:
     )
     def test_parse_iso_date(self, date_str, expected, error, error_match):
         if error_match is not None:
-            with pytest.raises(error, match=error_match):
+            with pytest.raises(error, match=exact_match(error_match)):
                 parse_iso_date(date_str)
             return
 
@@ -364,7 +384,7 @@ class TestComputeRefund:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(ValueError, match=error_match):
+            with pytest.raises(ValueError, match=exact_match(error_match)):
                 compute_refund(case["total_paid"], case["percentage"])
             return
 
@@ -409,7 +429,7 @@ class TestComputeBulkTotal:
     )
     def test_compute_bulk_total(self, unit_price, qty, expected, error_match):
         if error_match is not None:
-            with pytest.raises(ValueError, match=error_match):
+            with pytest.raises(ValueError, match=exact_match(error_match)):
                 compute_bulk_total(unit_price, qty)
             return
 
@@ -446,7 +466,7 @@ class TestValidateTaxNumber:
     )
     def test_validate_tax_number(self, tax_num, expected, error_match):
         if error_match is not None:
-            with pytest.raises(AttributeError, match=error_match):
+            with pytest.raises(AttributeError, match=exact_match(error_match)):
                 validate_tax_number(tax_num)
             return
 
@@ -512,7 +532,7 @@ class TestApplyDynamicTax:
         error_match = case.get("error_match")
 
         if error_match is not None:
-            with pytest.raises(AttributeError, match=error_match):
+            with pytest.raises(AttributeError, match=exact_match(error_match)):
                 apply_dynamic_tax(case["net"], case["country"])
             return
 
@@ -572,6 +592,9 @@ class TestCapPrice:
 
 
 class TestRoundMoney:
+    def test_default_decimals(self):
+        assert round_money(1.555) == 1.56
+
     @pytest.mark.parametrize(
         ("value", "decimals", "expected"),
         [
