@@ -4,7 +4,7 @@ Starter tests for Mutation Shootout.
 import pytest
 from billing import (
     price_with_tax, apply_coupon, compute_total, booking_fee,
-    compute_subtotal, convert_currency
+    compute_subtotal, convert_currency, compute_bulk_total
 )
 from billing.calculator import (
     _round, bulk_discount, compute_refund, parse_iso_date, split_payment,
@@ -366,3 +366,27 @@ class TestBulkDiscount:
     )
     def test_bulk_discount(self, qty, expected):
         assert bulk_discount(qty) == expected
+
+
+class TestComputeBulkTotal:
+    @pytest.mark.parametrize(
+        ("unit_price", "qty", "expected", "error_match"),
+        [
+            (10, 0, None, "qty must be positive"),
+            (10, -1, None, "qty must be positive"),
+            (-10, 1, None, "net must be non‑negative"),
+            (0, 1, 0, None),
+            (10.5, 1, 12.71, None),
+            (10, 9, 108.9, None),
+            (10, 10, 111.32, None),
+            (10, 20, 205.7, None),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_compute_bulk_total(self, unit_price, qty, expected, error_match):
+        if error_match is not None:
+            with pytest.raises(ValueError, match=error_match):
+                compute_bulk_total(unit_price, qty)
+            return
+
+        assert compute_bulk_total(unit_price, qty) == expected
