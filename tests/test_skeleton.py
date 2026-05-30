@@ -7,7 +7,8 @@ from billing import (
     compute_subtotal, convert_currency
 )
 from billing.calculator import (
-    _round, compute_refund, parse_iso_date, split_payment, validate_coupon
+    _round, bulk_discount, compute_refund, parse_iso_date, split_payment,
+    validate_coupon
 )
 
 
@@ -346,3 +347,22 @@ class TestComputeRefund:
             return
 
         assert compute_refund(case["total_paid"], case["percentage"]) == case["expected"]
+
+
+class TestBulkDiscount:
+    @pytest.mark.parametrize(
+        ("qty", "expected"),
+        [
+            (-1, 0),
+            (0, 0),
+            (1, 0),
+            (9, 0),
+            (10, 0.08),
+            (19, 0.08),
+            (20, 0.15),
+            (21, 0.15),
+        ],
+        ids=lambda case: str(case),
+    )
+    def test_bulk_discount(self, qty, expected):
+        assert bulk_discount(qty) == expected
